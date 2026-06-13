@@ -1,3 +1,11 @@
+## [1.0.2](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.0.1...v1.0.2) (2026-06-13)
+
+
+### Bug Fixes
+
+* don't tilt card if gyroscope in use ([99c62c7](https://github.com/hubertgdev/iridescent-card-prototype/commit/99c62c79fb95074c3636e725dca09296da8c1ae9))
+* ignore XCF ([d0dfe7c](https://github.com/hubertgdev/iridescent-card-prototype/commit/d0dfe7c821b58fb8eede45764135b4a6af6a7971))
+
 ## [1.0.1](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.0.0...v1.0.1) (2026-06-13)
 
 
