@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@fontsource-variable/jost";
+
+@theme inline {
+  --font-sans: "Jost Variable", sans-serif;
+}
