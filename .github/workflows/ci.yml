@@ -47,6 +47,8 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -65,21 +67,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Handle GitHub Pages deployment.
+      - uses: actions/configure-pages@v5
+
       - run: npm run build
-
-      # Handle Cloudflare Pages deployment.
-      # You can remove the two following steps if you don't need Cloudflare Pages deployment for this project.
-      - name: Check Cloudflare credentials
-        run: |
-          if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
-            echo "::warning::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set in repository secrets. Set them to enable deployment to Cloudflare Pages, or remove this step from this workflow if you don't use it."
-          fi
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # Vite reads this to set the base path so assets resolve under
+          # https://<user>.github.io/<repo>
+          BASE_PATH: /${{ github.event.repository.name }}/
 
-      - uses: cloudflare/wrangler-action@v4
+      # SPA fallback: GitHub Pages serves 404.html for any unknown path,
+      # so we copy index.html to let the client-side router handle deep links.
+      - run: cp dist/index.html dist/404.html
+
+      - uses: actions/upload-pages-artifact@v5
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME || github.event.repository.name }}
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v5
