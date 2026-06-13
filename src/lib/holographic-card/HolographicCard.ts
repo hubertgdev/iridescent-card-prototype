@@ -20,14 +20,12 @@ export class HolographicCard {
   private readonly gl: WebGL2RenderingContext
   private readonly uniforms: {
     uTilt: WebGLUniformLocation | null
-    uTime: WebGLUniformLocation | null
     uShapeTex: WebGLUniformLocation | null
     uGoldTex: WebGLUniformLocation | null
   }
 
   private tiltX = 0
   private tiltY = 0
-  private readonly startTime = performance.now()
   private rafId: number | null = null
 
   constructor(canvas: HTMLCanvasElement, options: HolographicCardOptions) {
@@ -53,7 +51,6 @@ export class HolographicCard {
 
     this.uniforms = {
       uTilt: gl.getUniformLocation(program, 'uTilt'),
-      uTime: gl.getUniformLocation(program, 'uTime'),
       uShapeTex: gl.getUniformLocation(program, 'uShapeTex'),
       uGoldTex: gl.getUniformLocation(program, 'uGoldTex'),
     }
@@ -102,7 +99,6 @@ export class HolographicCard {
   private render(): void {
     const { gl, uniforms } = this
     gl.uniform2f(uniforms.uTilt, this.tiltX, this.tiltY)
-    gl.uniform1f(uniforms.uTime, (performance.now() - this.startTime) / 1000)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
   }

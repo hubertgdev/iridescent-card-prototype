@@ -5,7 +5,6 @@ precision highp float;
 uniform sampler2D uShapeTex;
 uniform sampler2D uGoldTex;
 uniform vec2 uTilt;
-uniform float uTime;
 
 in vec2 vUv;
 
@@ -33,15 +32,15 @@ out vec4 fragColor;
 
 // --- Sparkle grain (golden areas only) ---
 // Density of the glitter grid (higher = smaller, more numerous specks).
-#define SPARKLE_GRID_SIZE 320.0
-// How much the sparkle pattern shifts as the card is tilted.
-#define SPARKLE_TILT_SHIFT 40.0
-// Twinkle animation speed.
-#define SPARKLE_SPEED 6.0
+#define SPARKLE_GRID_SIZE 800.0
 // Threshold in [0, 1): higher = fewer sparkles.
 #define SPARKLE_THRESHOLD 0.992
-// Brightness added by each sparkle.
-#define SPARKLE_INTENSITY 1.5
+// Gold tint of the sparkles (more intense/saturated than GOLD_HIGHLIGHT_COLOR).
+#define SPARKLE_COLOR vec3(1.8, 1.4, 0.5)
+// Sparkle brightness boost when NOT caught by the reflection (kept faintly visible).
+#define SPARKLE_DIM_BOOST 0.15
+// Sparkle brightness boost when caught by the reflection.
+#define SPARKLE_LIT_BOOST 1.6
 
 // Cheap pseudo-random hash, used for the glitter grain.
 float hash(vec2 p) {
@@ -72,13 +71,13 @@ void main() {
   float goldSheen = 1.0 - smoothstep(0.0, GOLD_SHEEN_WIDTH, sheenDist);
   vec3 goldColor = mix(GOLD_BASE_COLOR, GOLD_HIGHLIGHT_COLOR, pow(goldSheen, GOLD_SHEEN_SHARPNESS));
 
-  // Sparkle grain: a sparse field of glitter points that flicker and
-  // shift slightly with the tilt, only visible on the golden areas.
+  // Sparkle grain: a sparse field of glitter points fixed to the card
+  // surface, that glow brighter gold when caught by the reflection band.
   vec2 grainUv = floor(vUv * SPARKLE_GRID_SIZE);
-  float sparkleSeed = hash(grainUv + floor(uTilt * SPARKLE_TILT_SHIFT));
-  float twinkle = 0.5 + 0.5 * sin(uTime * SPARKLE_SPEED + sparkleSeed * 30.0);
-  float sparkle = step(SPARKLE_THRESHOLD, sparkleSeed) * twinkle;
-  goldColor += sparkle * SPARKLE_INTENSITY;
+  float sparkleSeed = hash(grainUv);
+  float sparkleMask = step(SPARKLE_THRESHOLD, sparkleSeed);
+  float sparkleBoost = mix(SPARKLE_DIM_BOOST, SPARKLE_LIT_BOOST, goldSheen);
+  goldColor += sparkleMask * sparkleBoost * SPARKLE_COLOR;
 
   vec3 color = mix(metalColor, goldColor, goldMask);
 
