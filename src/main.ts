@@ -13,8 +13,8 @@ if (!containerElement || !canvas) {
 const container = containerElement
 
 const card = new HolographicCard(canvas, {
-  shapeTextureUrl: '/shape.png',
-  goldTextureUrl: '/gold.png',
+  shapeTextureUrl: `${import.meta.env.BASE_URL}shape.png`,
+  goldTextureUrl: `${import.meta.env.BASE_URL}gold.png`,
 })
 
 function resize() {
