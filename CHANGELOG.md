@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.0.0...v1.0.1) (2026-06-13)
+
+
+### Bug Fixes
+
+* fixed asset paths ([11f1797](https://github.com/hubertgdev/iridescent-card-prototype/commit/11f1797ac7403b54c16bc5bc8c266e54b4b93645))
+
 # 1.0.0 (2026-06-13)
 
 
