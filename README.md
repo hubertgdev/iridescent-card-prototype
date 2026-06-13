@@ -1,6 +1,6 @@
-# my-app
+# Iridescent card prototype
 
-> Replace this description with a short summary of what this project does.
+Prototype for rendering an iridescent card on browser.
 
 ## Stack
 
