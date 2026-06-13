@@ -1,5 +1,5 @@
 import './style.css'
-import { HolographicCard, PointerTilt } from '@/lib/holographic-card'
+import { GyroscopeTilt, HolographicCard, PointerTilt } from '@/lib/holographic-card'
 
 console.log(`Ready! Version: ${__APP_VERSION__}`)
 
@@ -28,9 +28,25 @@ card.start()
 
 const RAD_TO_DEG = 180 / Math.PI
 
-new PointerTilt(container, {
-  onChange: (tiltX, tiltY) => {
-    card.setTilt(tiltX, tiltY)
-    container.style.transform = `rotateX(${-tiltY * RAD_TO_DEG}deg) rotateY(${tiltX * RAD_TO_DEG}deg)`
-  },
-})
+function handleTilt(tiltX: number, tiltY: number) {
+  card.setTilt(tiltX, tiltY)
+  container.style.transform = `rotateX(${-tiltY * RAD_TO_DEG}deg) rotateY(${tiltX * RAD_TO_DEG}deg)`
+}
+
+const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
+
+if (isTouchDevice && GyroscopeTilt.isSupported()) {
+  const enableGyroscope = () => {
+    GyroscopeTilt.requestPermission().then((granted) => {
+      if (granted) {
+        new GyroscopeTilt({ onChange: handleTilt })
+      } else {
+        new PointerTilt(container, { onChange: handleTilt })
+      }
+    })
+  }
+  // iOS only grants access to orientation events from within a user gesture.
+  window.addEventListener('pointerdown', enableGyroscope, { once: true })
+} else {
+  new PointerTilt(container, { onChange: handleTilt })
+}
