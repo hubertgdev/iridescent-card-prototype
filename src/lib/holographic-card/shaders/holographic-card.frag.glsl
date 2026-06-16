@@ -3,7 +3,8 @@
 precision highp float;
 
 uniform sampler2D uShapeTex;
-uniform sampler2D uGoldTex;
+uniform sampler2D uFrontFoilTex;
+uniform sampler2D uBackFoilTex;
 uniform vec2 uTilt;
 
 in vec2 vUv;
@@ -50,16 +51,25 @@ float hash(vec2 p) {
 }
 
 void main() {
-  float shapeMask = texture(uShapeTex, vUv).r;
+  // When the card is turned over, its back face reads mirrored across the
+  // vertical axis (as a real flipped card would), so mirror the lookup to keep
+  // the back artwork the right way round.
+  vec2 uv = vUv;
+  if (!gl_FrontFacing) {
+    uv.x = 1.0 - uv.x;
+  }
+
+  float shapeMask = texture(uShapeTex, uv).r;
   if (shapeMask < 0.5) {
     discard;
   }
 
-  float goldMask = texture(uGoldTex, vUv).r;
+  // The golden foil alpha map differs per face.
+  float goldMask = gl_FrontFacing ? texture(uFrontFoilTex, uv).r : texture(uBackFoilTex, uv).r;
 
   // Diagonal coordinate used to sweep a light band across the card.
-  // It shifts with the tilt so the reflection reacts to the drag.
-  float diag = vUv.x + vUv.y;
+  // It shifts with the tilt so the reflection reacts to the orientation.
+  float diag = uv.x + uv.y;
   float sheenPos = 1.0 + uTilt.x * SHEEN_TILT_STRENGTH - uTilt.y * SHEEN_TILT_STRENGTH;
   float sheenDist = abs(diag - sheenPos);
 
@@ -73,7 +83,7 @@ void main() {
 
   // Sparkle grain: a sparse field of glitter points fixed to the card
   // surface, that glow brighter gold when caught by the reflection band.
-  vec2 grainUv = floor(vUv * SPARKLE_GRID_SIZE);
+  vec2 grainUv = floor(uv * SPARKLE_GRID_SIZE);
   float sparkleSeed = hash(grainUv);
   float sparkleMask = step(SPARKLE_THRESHOLD, sparkleSeed);
   float sparkleBoost = mix(SPARKLE_DIM_BOOST, SPARKLE_LIT_BOOST, goldSheen);
