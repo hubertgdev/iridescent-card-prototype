@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.1.0...v1.2.0) (2026-06-16)
+
+
+### Features
+
+* new artworks ([5abef87](https://github.com/hubertgdev/iridescent-card-prototype/commit/5abef870233d5b78a85075220da8f4eab8af83fe))
+
 # [1.1.0](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.0.2...v1.1.0) (2026-06-16)
 
 
