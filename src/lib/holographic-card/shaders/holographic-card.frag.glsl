@@ -15,21 +15,22 @@ out vec4 fragColor;
 // How strongly the tilt shifts the reflection band across the card.
 #define SHEEN_TILT_STRENGTH 1.5
 
-// --- Dark metallic base ---
+// --- Dark matte base ---
 #define METAL_BASE_COLOR vec3(0.05, 0.055, 0.07)
-#define METAL_HIGHLIGHT_COLOR vec3(0.45, 0.48, 0.55)
-// Width of the metal reflection band (larger = more diffused).
-#define METAL_SHEEN_WIDTH 0.5
-// How much the reflection brightens the metal (0..1).
-#define METAL_SHEEN_INTENSITY 0.4
+#define METAL_HIGHLIGHT_COLOR vec3(0.16, 0.17, 0.2)
+// Width of the reflection band (larger = more diffused).
+#define METAL_SHEEN_WIDTH 0.75
+// How much the reflection brightens the base (0..1). Low = matte, barely
+// catching the light.
+#define METAL_SHEEN_INTENSITY 0.5
 
 // --- Golden areas ---
 #define GOLD_BASE_COLOR vec3(0.45, 0.3, 0.08)
-#define GOLD_HIGHLIGHT_COLOR vec3(1.4, 1.2, 0.7)
+#define GOLD_HIGHLIGHT_COLOR vec3(1.1, 1.05, 0.625)
 // Width of the gold reflection band (larger = more diffused).
-#define GOLD_SHEEN_WIDTH 0.2
+#define GOLD_SHEEN_WIDTH 0.5
 // Sharpness of the gold reflection falloff (higher = narrower hotspot).
-#define GOLD_SHEEN_SHARPNESS 4.0
+#define GOLD_SHEEN_SHARPNESS 5.0
 
 // --- Sparkle grain (golden areas only) ---
 // Density of the glitter grid (higher = smaller, more numerous specks).
