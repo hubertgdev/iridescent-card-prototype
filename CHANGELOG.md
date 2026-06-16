@@ -1,3 +1,13 @@
+# [1.1.0](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.0.2...v1.1.0) (2026-06-16)
+
+
+### Features
+
+* drag and drop ([74cde43](https://github.com/hubertgdev/iridescent-card-prototype/commit/74cde434895f22c863d00774e21590f1918b259e))
+* drive render size from shape image ([a07ba9c](https://github.com/hubertgdev/iridescent-card-prototype/commit/a07ba9c3b90008bc11215020d8e116b21408df07))
+* orbiting view & 3D ([10f7db3](https://github.com/hubertgdev/iridescent-card-prototype/commit/10f7db3790e3434332e225e1332cc426b5c92c18))
+* upload files ([31997f0](https://github.com/hubertgdev/iridescent-card-prototype/commit/31997f0f802b333cc7e1273b98d5a9d0cda1692e))
+
 ## [1.0.2](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.0.1...v1.0.2) (2026-06-13)
 
 
