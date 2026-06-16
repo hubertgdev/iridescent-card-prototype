@@ -49,6 +49,9 @@ export class HolographicCard {
   /** Constant projection * view matrix (the card only contributes a model rotation). */
   private readonly projectionView: Float32Array
   private mvp: Float32Array
+  /** The textures backing each sampler, kept so they can be replaced at runtime. */
+  private readonly textures: { shape: WebGLTexture; front: WebGLTexture; back: WebGLTexture }
+  private readonly onShapeSize?: (width: number, height: number) => void
 
   constructor(canvas: HTMLCanvasElement, options: HolographicCardOptions) {
     const gl = canvas.getContext('webgl2', {
@@ -79,11 +82,17 @@ export class HolographicCard {
       uBackFoilTex: gl.getUniformLocation(program, 'uBackFoilTex'),
     }
 
-    loadTexture(gl, options.shapeTextureUrl, gl.TEXTURE0, (image) => {
-      options.onShapeSize?.(image.naturalWidth, image.naturalHeight)
+    this.onShapeSize = options.onShapeSize
+    this.textures = {
+      shape: this.createPlaceholderTexture(gl.TEXTURE0),
+      front: this.createPlaceholderTexture(gl.TEXTURE1),
+      back: this.createPlaceholderTexture(gl.TEXTURE2),
+    }
+    this.loadFromUrl(this.textures.shape, gl.TEXTURE0, options.shapeTextureUrl, (image) => {
+      this.onShapeSize?.(image.naturalWidth, image.naturalHeight)
     })
-    loadTexture(gl, options.frontTextureUrl, gl.TEXTURE1)
-    loadTexture(gl, options.backTextureUrl, gl.TEXTURE2)
+    this.loadFromUrl(this.textures.front, gl.TEXTURE1, options.frontTextureUrl)
+    this.loadFromUrl(this.textures.back, gl.TEXTURE2, options.backTextureUrl)
     gl.uniform1i(this.uniforms.uShapeTex, 0)
     gl.uniform1i(this.uniforms.uFrontFoilTex, 1)
     gl.uniform1i(this.uniforms.uBackFoilTex, 2)
@@ -119,6 +128,63 @@ export class HolographicCard {
     this.mvp = multiply(this.projectionView, model)
     this.tiltX = Math.sin(rotY)
     this.tiltY = Math.sin(rotX)
+  }
+
+  /**
+   * Replaces the silhouette alpha map. Its dimensions are reported through the
+   * `onShapeSize` callback so the card can re-adapt its aspect ratio.
+   */
+  setShapeImage(image: HTMLImageElement): void {
+    this.uploadImage(this.textures.shape, this.gl.TEXTURE0, image)
+    this.onShapeSize?.(image.naturalWidth, image.naturalHeight)
+  }
+
+  /** Replaces the golden foil alpha map shown on the front face. */
+  setFrontImage(image: HTMLImageElement): void {
+    this.uploadImage(this.textures.front, this.gl.TEXTURE1, image)
+  }
+
+  /** Replaces the golden foil alpha map shown on the back face. */
+  setBackImage(image: HTMLImageElement): void {
+    this.uploadImage(this.textures.back, this.gl.TEXTURE2, image)
+  }
+
+  /** Creates a texture bound to `unit`, holding a 1x1 transparent placeholder. */
+  private createPlaceholderTexture(unit: number): WebGLTexture {
+    const { gl } = this
+    const texture = gl.createTexture()
+    gl.activeTexture(unit)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]))
+    return texture
+  }
+
+  /** Uploads an image into the given texture and (re)applies its sampling parameters. */
+  private uploadImage(texture: WebGLTexture, unit: number, source: TexImageSource): void {
+    const { gl } = this
+    gl.activeTexture(unit)
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+  }
+
+  /** Loads an image from a URL into the given texture, uploading it once ready. */
+  private loadFromUrl(
+    texture: WebGLTexture,
+    unit: number,
+    url: string,
+    onLoad?: (image: HTMLImageElement) => void,
+  ): void {
+    const image = new Image()
+    image.onload = () => {
+      this.uploadImage(texture, unit, image)
+      onLoad?.(image)
+    }
+    image.src = url
   }
 
   /** Resizes the drawing buffer to match the given CSS size. */
@@ -227,33 +293,6 @@ function scaling(s: number): Float32Array {
     0, 0, s, 0,
     0, 0, 0, 1,
   ])
-}
-
-function loadTexture(
-  gl: WebGL2RenderingContext,
-  url: string,
-  unit: number,
-  onLoad?: (image: HTMLImageElement) => void,
-): void {
-  const texture = gl.createTexture()
-  gl.activeTexture(unit)
-  gl.bindTexture(gl.TEXTURE_2D, texture)
-  // 1x1 transparent placeholder until the image has loaded.
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 0]))
-
-  const image = new Image()
-  image.onload = () => {
-    gl.activeTexture(unit)
-    gl.bindTexture(gl.TEXTURE_2D, texture)
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-    onLoad?.(image)
-  }
-  image.src = url
 }
 
 function createShader(gl: WebGL2RenderingContext, type: number, source: string): WebGLShader {

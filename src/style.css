@@ -14,9 +14,33 @@ body {
   margin: 0;
   display: grid;
   place-items: center;
+  gap: 2rem;
   min-height: 100vh;
   background: #0b0c10;
   font-family: var(--font-sans);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.control {
+  padding: 0.5rem 1rem;
+  border: 1px solid #2a2d36;
+  border-radius: 0.5rem;
+  background: #15171d;
+  color: #e6e8ee;
+  font-size: 0.875rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.control:hover {
+  border-color: #4a4f5e;
+  background: #1c1f27;
 }
 
 .page {

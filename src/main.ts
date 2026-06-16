@@ -45,6 +45,30 @@ function handleGyroscopeTilt(tiltX: number, tiltY: number) {
   card.setTilt(tiltX, tiltY)
 }
 
+// Let the artist swap any of the alpha maps from their own files. The image is
+// read locally (no upload, no storage) and pushed straight to the shader.
+function wireUpload(inputId: string, apply: (image: HTMLImageElement) => void) {
+  const input = document.querySelector<HTMLInputElement>(inputId)
+  if (!input) return
+  input.addEventListener('change', () => {
+    const file = input.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    const image = new Image()
+    image.onload = () => {
+      apply(image)
+      URL.revokeObjectURL(url)
+    }
+    image.src = url
+    // Allow re-selecting the same file to trigger another change.
+    input.value = ''
+  })
+}
+
+wireUpload('#upload-front', (image) => card.setFrontImage(image))
+wireUpload('#upload-back', (image) => card.setBackImage(image))
+wireUpload('#upload-shape', (image) => card.setShapeImage(image))
+
 const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
 
 if (isTouchDevice && GyroscopeTilt.isSupported()) {
