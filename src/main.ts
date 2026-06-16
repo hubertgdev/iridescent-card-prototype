@@ -15,6 +15,12 @@ const container = containerElement
 const card = new HolographicCard(canvas, {
   shapeTextureUrl: `${import.meta.env.BASE_URL}shape.png`,
   goldTextureUrl: `${import.meta.env.BASE_URL}gold.png`,
+  // The shape silhouette drives the card's aspect ratio, so the render adapts
+  // to whatever format (5:7, tarot 7:12, arbitrary…) the artist's shape uses.
+  onShapeSize: (width, height) => {
+    container.style.aspectRatio = `${width} / ${height}`
+    resize()
+  },
 })
 
 function resize() {

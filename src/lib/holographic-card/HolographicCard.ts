@@ -6,6 +6,12 @@ export interface HolographicCardOptions {
   shapeTextureUrl: string
   /** URL of the alpha map defining the golden areas and their intensity. */
   goldTextureUrl: string
+  /**
+   * Called with the shape texture's natural pixel size once it has loaded.
+   * The shape's dimensions are meant to drive the card's aspect ratio, so the
+   * render adapts to whatever silhouette (and format) the artist provides.
+   */
+  onShapeSize?: (width: number, height: number) => void
 }
 
 const QUAD_VERTICES = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1])
@@ -55,7 +61,9 @@ export class HolographicCard {
       uGoldTex: gl.getUniformLocation(program, 'uGoldTex'),
     }
 
-    loadTexture(gl, options.shapeTextureUrl, gl.TEXTURE0)
+    loadTexture(gl, options.shapeTextureUrl, gl.TEXTURE0, (image) => {
+      options.onShapeSize?.(image.naturalWidth, image.naturalHeight)
+    })
     loadTexture(gl, options.goldTextureUrl, gl.TEXTURE1)
     gl.uniform1i(this.uniforms.uShapeTex, 0)
     gl.uniform1i(this.uniforms.uGoldTex, 1)
@@ -104,7 +112,12 @@ export class HolographicCard {
   }
 }
 
-function loadTexture(gl: WebGL2RenderingContext, url: string, unit: number): void {
+function loadTexture(
+  gl: WebGL2RenderingContext,
+  url: string,
+  unit: number,
+  onLoad?: (image: HTMLImageElement) => void,
+): void {
   const texture = gl.createTexture()
   gl.activeTexture(unit)
   gl.bindTexture(gl.TEXTURE_2D, texture)
@@ -121,6 +134,7 @@ function loadTexture(gl: WebGL2RenderingContext, url: string, unit: number): voi
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+    onLoad?.(image)
   }
   image.src = url
 }
