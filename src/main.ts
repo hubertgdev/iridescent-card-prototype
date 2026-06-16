@@ -1,5 +1,5 @@
 import './style.css'
-import { GyroscopeTilt, HolographicCard, PointerTilt } from '@/lib/holographic-card'
+import { GyroscopeTilt, HolographicCard, PointerOrbit } from '@/lib/holographic-card'
 
 console.log(`Ready! Version: ${__APP_VERSION__}`)
 
@@ -14,7 +14,14 @@ const container = containerElement
 
 const card = new HolographicCard(canvas, {
   shapeTextureUrl: `${import.meta.env.BASE_URL}shape.png`,
-  goldTextureUrl: `${import.meta.env.BASE_URL}gold.png`,
+  frontTextureUrl: `${import.meta.env.BASE_URL}gold.png`,
+  backTextureUrl: `${import.meta.env.BASE_URL}back.png`,
+  // The shape silhouette drives the card's aspect ratio, so the render adapts
+  // to whatever format (5:7, tarot 7:12, arbitrary…) the artist's shape uses.
+  onShapeSize: (width, height) => {
+    container.style.aspectRatio = `${width} / ${height}`
+    resize()
+  },
 })
 
 function resize() {
@@ -26,12 +33,10 @@ window.addEventListener('resize', resize)
 resize()
 card.start()
 
-const RAD_TO_DEG = 180 / Math.PI
-
-// Drag rotates the card visually (CSS transform) and drives the shader.
-function handleDragTilt(tiltX: number, tiltY: number) {
-  card.setTilt(tiltX, tiltY)
-  container.style.transform = `rotateX(${-tiltY * RAD_TO_DEG}deg) rotateY(${tiltX * RAD_TO_DEG}deg)`
+// Drag turns the card in 3D (handled in the shader), revealing its back face
+// past a half turn. The reflection sheen follows the orientation.
+function handleOrbit(rotX: number, rotY: number) {
+  card.setOrientation(rotX, rotY)
 }
 
 // Gyroscope only drives the shader's reflection: rotating the card itself
@@ -39,6 +44,49 @@ function handleDragTilt(tiltX: number, tiltY: number) {
 function handleGyroscopeTilt(tiltX: number, tiltY: number) {
   card.setTilt(tiltX, tiltY)
 }
+
+// Let the artist swap any of the alpha maps from their own files. The image is
+// read locally (no upload, no storage) and pushed straight to the shader.
+function readImage(file: File | undefined, apply: (image: HTMLImageElement) => void) {
+  if (!file?.type.startsWith('image/')) return
+  const url = URL.createObjectURL(file)
+  const image = new Image()
+  image.onload = () => {
+    apply(image)
+    URL.revokeObjectURL(url)
+  }
+  image.src = url
+}
+
+// Each button works both as a file picker (click) and a drop target.
+function wireUpload(inputId: string, apply: (image: HTMLImageElement) => void) {
+  const input = document.querySelector<HTMLInputElement>(inputId)
+  const button = input?.closest<HTMLLabelElement>('.control')
+  if (!input || !button) return
+
+  input.addEventListener('change', () => {
+    readImage(input.files?.[0], apply)
+    // Allow re-selecting the same file to trigger another change.
+    input.value = ''
+  })
+
+  button.addEventListener('dragover', (event) => {
+    event.preventDefault()
+    button.classList.add('control--dragover')
+  })
+  button.addEventListener('dragleave', () => {
+    button.classList.remove('control--dragover')
+  })
+  button.addEventListener('drop', (event) => {
+    event.preventDefault()
+    button.classList.remove('control--dragover')
+    readImage(event.dataTransfer?.files?.[0], apply)
+  })
+}
+
+wireUpload('#upload-front', (image) => card.setFrontImage(image))
+wireUpload('#upload-back', (image) => card.setBackImage(image))
+wireUpload('#upload-shape', (image) => card.setShapeImage(image))
 
 const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
 
@@ -48,12 +96,12 @@ if (isTouchDevice && GyroscopeTilt.isSupported()) {
       if (granted) {
         new GyroscopeTilt({ onChange: handleGyroscopeTilt })
       } else {
-        new PointerTilt(container, { onChange: handleDragTilt })
+        new PointerOrbit(container, { onChange: handleOrbit })
       }
     })
   }
   // iOS only grants access to orientation events from within a user gesture.
   window.addEventListener('pointerdown', enableGyroscope, { once: true })
 } else {
-  new PointerTilt(container, { onChange: handleDragTilt })
+  new PointerOrbit(container, { onChange: handleOrbit })
 }

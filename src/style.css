@@ -14,9 +14,56 @@ body {
   margin: 0;
   display: grid;
   place-items: center;
+  gap: 2rem;
   min-height: 100vh;
   background: #0b0c10;
   font-family: var(--font-sans);
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.controls__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.controls__hint {
+  margin: 0;
+  color: #8a8f9c;
+  font-size: 0.8125rem;
+}
+
+.control {
+  /* box-sizing: border-box (Tailwind preflight) keeps the button size fixed
+     when the border thickens on dragover, so neighbours don't shift. */
+  padding: 0.85rem 1.75rem;
+  border: 2px solid #2a2d36;
+  border-radius: 0.5rem;
+  background: #15171d;
+  color: #e6e8ee;
+  font-size: 1rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.control:hover {
+  border-color: #4a4f5e;
+  background: #1c1f27;
+}
+
+/* Shown while a file is dragged over the button, to signal it can be dropped. */
+.control--dragover {
+  border-width: 3px;
+  border-style: dashed;
+  border-color: #c9a24b;
+  background: #1c1f27;
 }
 
 .page {
