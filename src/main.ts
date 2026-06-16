@@ -1,5 +1,5 @@
 import './style.css'
-import { GyroscopeTilt, HolographicCard, PointerTilt } from '@/lib/holographic-card'
+import { GyroscopeTilt, HolographicCard, PointerOrbit } from '@/lib/holographic-card'
 
 console.log(`Ready! Version: ${__APP_VERSION__}`)
 
@@ -14,7 +14,8 @@ const container = containerElement
 
 const card = new HolographicCard(canvas, {
   shapeTextureUrl: `${import.meta.env.BASE_URL}shape.png`,
-  goldTextureUrl: `${import.meta.env.BASE_URL}gold.png`,
+  frontTextureUrl: `${import.meta.env.BASE_URL}gold.png`,
+  backTextureUrl: `${import.meta.env.BASE_URL}back.png`,
   // The shape silhouette drives the card's aspect ratio, so the render adapts
   // to whatever format (5:7, tarot 7:12, arbitrary…) the artist's shape uses.
   onShapeSize: (width, height) => {
@@ -32,12 +33,10 @@ window.addEventListener('resize', resize)
 resize()
 card.start()
 
-const RAD_TO_DEG = 180 / Math.PI
-
-// Drag rotates the card visually (CSS transform) and drives the shader.
-function handleDragTilt(tiltX: number, tiltY: number) {
-  card.setTilt(tiltX, tiltY)
-  container.style.transform = `rotateX(${-tiltY * RAD_TO_DEG}deg) rotateY(${tiltX * RAD_TO_DEG}deg)`
+// Drag turns the card in 3D (handled in the shader), revealing its back face
+// past a half turn. The reflection sheen follows the orientation.
+function handleOrbit(rotX: number, rotY: number) {
+  card.setOrientation(rotX, rotY)
 }
 
 // Gyroscope only drives the shader's reflection: rotating the card itself
@@ -54,12 +53,12 @@ if (isTouchDevice && GyroscopeTilt.isSupported()) {
       if (granted) {
         new GyroscopeTilt({ onChange: handleGyroscopeTilt })
       } else {
-        new PointerTilt(container, { onChange: handleDragTilt })
+        new PointerOrbit(container, { onChange: handleOrbit })
       }
     })
   }
   // iOS only grants access to orientation events from within a user gesture.
   window.addEventListener('pointerdown', enableGyroscope, { once: true })
 } else {
-  new PointerTilt(container, { onChange: handleDragTilt })
+  new PointerOrbit(container, { onChange: handleOrbit })
 }
