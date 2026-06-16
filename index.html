@@ -13,18 +13,21 @@
       </div>
     </div>
     <div class="controls">
-      <label class="control">
-        Front foil
-        <input type="file" id="upload-front" accept="image/*" hidden />
-      </label>
-      <label class="control">
-        Back foil
-        <input type="file" id="upload-back" accept="image/*" hidden />
-      </label>
-      <label class="control">
-        Shape
-        <input type="file" id="upload-shape" accept="image/*" hidden />
-      </label>
+      <div class="controls__buttons">
+        <label class="control">
+          Front foil
+          <input type="file" id="upload-front" accept="image/*" hidden />
+        </label>
+        <label class="control">
+          Back foil
+          <input type="file" id="upload-back" accept="image/*" hidden />
+        </label>
+        <label class="control">
+          Shape
+          <input type="file" id="upload-shape" accept="image/*" hidden />
+        </label>
+      </div>
+      <p class="controls__hint">Click a button to pick a file, or drag &amp; drop one onto it.</p>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

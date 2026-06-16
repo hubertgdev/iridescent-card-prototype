@@ -47,21 +47,40 @@ function handleGyroscopeTilt(tiltX: number, tiltY: number) {
 
 // Let the artist swap any of the alpha maps from their own files. The image is
 // read locally (no upload, no storage) and pushed straight to the shader.
+function readImage(file: File | undefined, apply: (image: HTMLImageElement) => void) {
+  if (!file?.type.startsWith('image/')) return
+  const url = URL.createObjectURL(file)
+  const image = new Image()
+  image.onload = () => {
+    apply(image)
+    URL.revokeObjectURL(url)
+  }
+  image.src = url
+}
+
+// Each button works both as a file picker (click) and a drop target.
 function wireUpload(inputId: string, apply: (image: HTMLImageElement) => void) {
   const input = document.querySelector<HTMLInputElement>(inputId)
-  if (!input) return
+  const button = input?.closest<HTMLLabelElement>('.control')
+  if (!input || !button) return
+
   input.addEventListener('change', () => {
-    const file = input.files?.[0]
-    if (!file) return
-    const url = URL.createObjectURL(file)
-    const image = new Image()
-    image.onload = () => {
-      apply(image)
-      URL.revokeObjectURL(url)
-    }
-    image.src = url
+    readImage(input.files?.[0], apply)
     // Allow re-selecting the same file to trigger another change.
     input.value = ''
+  })
+
+  button.addEventListener('dragover', (event) => {
+    event.preventDefault()
+    button.classList.add('control--dragover')
+  })
+  button.addEventListener('dragleave', () => {
+    button.classList.remove('control--dragover')
+  })
+  button.addEventListener('drop', (event) => {
+    event.preventDefault()
+    button.classList.remove('control--dragover')
+    readImage(event.dataTransfer?.files?.[0], apply)
   })
 }
 
