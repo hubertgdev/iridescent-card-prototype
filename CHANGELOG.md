@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.2.0...v1.3.0) (2026-06-16)
+
+
+### Features
+
+* add satellite sheens ([8d7b0e1](https://github.com/hubertgdev/iridescent-card-prototype/commit/8d7b0e145988e913f41533262813c59edfe3e52a))
+
 # [1.2.0](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.1.0...v1.2.0) (2026-06-16)
 
 
