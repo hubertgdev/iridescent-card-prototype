@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.3.0...v1.3.1) (2026-06-18)
+
+
+### Bug Fixes
+
+* attempt fixing rotate input on mobile ([4106fbc](https://github.com/hubertgdev/iridescent-card-prototype/commit/4106fbcf37a963d1503cfbef02312e19bca881b3))
+
 # [1.3.0](https://github.com/hubertgdev/iridescent-card-prototype/compare/v1.2.0...v1.3.0) (2026-06-16)
 
 
