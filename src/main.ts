@@ -88,6 +88,13 @@ wireUpload('#upload-front', (image) => card.setFrontImage(image))
 wireUpload('#upload-back', (image) => card.setBackImage(image))
 wireUpload('#upload-shape', (image) => card.setShapeImage(image))
 
+// Touch+drag always rotates the card. It is created synchronously so the very
+// first pointerdown — which also doubles as the gyroscope permission gesture on
+// iOS — still registers as the start of a drag instead of being swallowed.
+new PointerOrbit(container, { onChange: handleOrbit })
+
+// On touch devices, the gyroscope additionally nudges the reflection sheen, on
+// top of (not instead of) the drag rotation. The card sums both contributions.
 const isTouchDevice = window.matchMedia('(pointer: coarse)').matches
 
 if (isTouchDevice && GyroscopeTilt.isSupported()) {
@@ -95,13 +102,10 @@ if (isTouchDevice && GyroscopeTilt.isSupported()) {
     GyroscopeTilt.requestPermission().then((granted) => {
       if (granted) {
         new GyroscopeTilt({ onChange: handleGyroscopeTilt })
-      } else {
-        new PointerOrbit(container, { onChange: handleOrbit })
       }
+      // If denied, touch+drag alone remains active — nothing more to wire up.
     })
   }
   // iOS only grants access to orientation events from within a user gesture.
   window.addEventListener('pointerdown', enableGyroscope, { once: true })
-} else {
-  new PointerOrbit(container, { onChange: handleOrbit })
 }
