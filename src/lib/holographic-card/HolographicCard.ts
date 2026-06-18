@@ -43,8 +43,13 @@ export class HolographicCard {
     uBackFoilTex: WebGLUniformLocation | null
   }
 
-  private tiltX = 0
-  private tiltY = 0
+  // The sheen is driven by two independent contributions that are summed at
+  // render time, so the pointer (orientation) and gyroscope (tilt) paths can be
+  // active at once without overwriting each other.
+  private orientTiltX = 0
+  private orientTiltY = 0
+  private gyroTiltX = 0
+  private gyroTiltY = 0
   private rafId: number | null = null
   /** Constant projection * view matrix (the card only contributes a model rotation). */
   private readonly projectionView: Float32Array
@@ -111,11 +116,13 @@ export class HolographicCard {
   /**
    * Sets the sheen tilt directly, without rotating the card. Intended for the
    * gyroscope path, where rotating the card alongside the device would feel
-   * disorienting and only the reflection should react.
+   * disorienting and only the reflection should react. This contribution is
+   * summed with the orientation-derived sheen, so it can coexist with
+   * pointer-drag rotation (see {@link setOrientation}).
    */
   setTilt(tiltX: number, tiltY: number): void {
-    this.tiltX = tiltX
-    this.tiltY = tiltY
+    this.gyroTiltX = tiltX
+    this.gyroTiltY = tiltY
   }
 
   /**
@@ -126,8 +133,8 @@ export class HolographicCard {
   setOrientation(rotX: number, rotY: number): void {
     const model = multiply(multiply(rotationX(rotX), rotationY(rotY)), scaling(MODEL_SCALE))
     this.mvp = multiply(this.projectionView, model)
-    this.tiltX = Math.sin(rotY)
-    this.tiltY = Math.sin(rotX)
+    this.orientTiltX = Math.sin(rotY)
+    this.orientTiltY = Math.sin(rotX)
   }
 
   /**
@@ -215,7 +222,7 @@ export class HolographicCard {
 
   private render(): void {
     const { gl, uniforms } = this
-    gl.uniform2f(uniforms.uTilt, this.tiltX, this.tiltY)
+    gl.uniform2f(uniforms.uTilt, this.orientTiltX + this.gyroTiltX, this.orientTiltY + this.gyroTiltY)
     gl.uniformMatrix4fv(uniforms.uMvp, false, this.mvp)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
