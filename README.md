@@ -2,6 +2,8 @@
 
 Prototype for rendering an iridescent card on browser.
 
+Demo: https://hubertgdev.github.io/iridescent-card-prototype
+
 ## Stack
 
 | Tool | Role |
